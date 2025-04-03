@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Laptop2 } from 'lucide-react';
-import { MetricCard } from './components/MetricCard';
-import { StatusIndicator } from './components/StatusIndicator';
+import { QRCodeSVG } from 'qrcode.react'; // Ensure you have this library installed
 import type { ScoutField } from './types';
 
 const scoutConfig = {
@@ -448,6 +447,8 @@ function App() {
   });
 
   const [timers, setTimers] = useState<Record<string, { isRunning: boolean; startTime: number; elapsed: number }>>({});
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [isDark] = useState(false); // Example dark mode toggle
 
   // Calculate total ranking points
   const totalRankingPoints = useMemo(() => {
@@ -534,6 +535,16 @@ function App() {
 
     return () => clearInterval(interval);
   }, []);
+
+  const getFormDataString = () => {
+    return Object.entries(formData)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join("\n");
+  };
+
+  const handleCommit = () => {
+    setShowQRCode(true);
+  };
 
   const renderField = (field: ScoutField) => {
     switch (field.type) {
@@ -791,6 +802,51 @@ function App() {
             ></textarea>
           </div>
         </div>
+      </div>
+
+      {/* QR Code Modal */}
+      {showQRCode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${isDark ? 'bg-dark-800' : 'bg-white'} p-8 rounded-lg shadow-xl max-w-md w-full`}>
+            <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>Scan QR Code</h3>
+            <div className="flex justify-center mb-4">
+              <QRCodeSVG
+                value={getFormDataString()}
+                size={256}
+                level="H"
+                includeMargin={true}
+                bgColor={isDark ? '#1e293b' : '#ffffff'}
+                fgColor={isDark ? '#ffffff' : '#000000'}
+              />
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowQRCode(false)}
+                className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  isDark 
+                    ? 'bg-dark-700 text-gray-300 hover:bg-dark-600 focus:ring-dark-500' 
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500'
+                }`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Commit Button */}
+      <div className="fixed bottom-8 right-8">
+        <button
+          onClick={handleCommit}
+          className={`px-6 py-3 rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            isDark 
+              ? 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-400' 
+              : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
+          }`}
+        >
+          Commit Data
+        </button>
       </div>
     </div>
   );
